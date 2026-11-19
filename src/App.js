@@ -1,5 +1,7 @@
 import "./styles.css";
-
+//First run the terminal command of 'npm install' to install the necessary NPM's and then inside the terminal bash
+//run the 'npm start' command and it will display across the port of 'http://localhost:3000' this ReactAppProject 
+//using Github'Codespaces while updating this index/app/index/styles codebase
 import React, { useState, useEffect, Fragment, useMemo } from "react";
 //React's internal engine creates the function mechanism when useState() runs.
 
@@ -29,8 +31,8 @@ function App() {
 	{/*And this happens when the program is executed it sends a fetch call to MicrosoftGithub, with an async command*/}
     const fetchGithubProfile = async () => {
       try {
-		{/*try is a form of order from the codebase to the communication between github and this App.js file it now declares the headers variable here*/}
-        const headers = {
+		{/*try is a form of statement from the codebase to the communication between github and this App.js file it now declares the headers variable here*/}
+		const headers = {
           Accept: "application/vnd.github+json",
           "X-GitHub-Api-Version": "2022-11-28",
         };
@@ -73,11 +75,7 @@ function App() {
 		setGithubRepositories: Holds the internal React function created specifically to update githubRepositories, the variable named 'repositories' containing your list of repos.
 		You pass it as an argument into setGithubRepositories()*/}
         setGithubRepositories(repositories);
-      }
-	  {/*That will conclude the try loop which fetched the necessary jsons to work with in our App.js file with the JavaScript coding'language and now usually to true computer science
-	  form with every try statement, as it used if loops as well inside of it, you conclude the try statement with a catch control-flow block and this is used if there is Errors reported or is happening in real time
-	  for instance it could and what this is is a precaution. Usually the try loop and json fetches always truly complete once again only in precaution*/}
-	    catch (error) {
+      } catch (error) {
 	        if (error.name !== "AbortError") {
 	          setGithubError(error.message);
 	        }
@@ -86,6 +84,9 @@ function App() {
 		          setGithubLoading(false);
 		        }
 	    }
+	  {/*That will conclude the try loop which fetched the necessary jsons to work with in our App.js file with the JavaScript coding'language and now usually to true computer science
+	  form with every try statement, as it used if loops as well inside of it, you conclude the try statement with a catch control-flow block and this is used if there is Errors reported or is happening in real time
+	  for instance it could and what this is is a precaution. Usually the try loop and json fetches always truly complete once again only in precaution*/}
     };
 
     fetchGithubProfile();
