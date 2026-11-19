@@ -1,35 +1,44 @@
 import "./styles.css";
 
 import React, { useState, useEffect, Fragment, useMemo } from "react";
-//import React, { Fragment } from 'react';
+//React's internal engine creates the function mechanism when useState() runs.
 
 import Text from "react-text";
 import { DictionaryProvider as BaseProvider } from "@codedazur/react-dictionary";
 
 function App() {
   // React state to store JSON data
+  // This is where the decleration of variables, used and to be used, has been written in code
   const [data, setData] = useState([]);//data is a defining variable and is part of the JSON returning methods and here it is declared with React'State()
   const [weather, setWeather] = useState(null);
   const [dailyForecast, setDailyForecast] = useState(null);
   const [weatherError, setWeatherError] = useState("");
   const [weatherLoading, setWeatherLoading] = useState(true);
-
+  
   const [patient, setPatient] = useState(null);
+  //Here is the setGithubProfile method declared within the useState function when you imported React then the 'hooks' of useState became available
   const [githubProfile, setGithubProfile] = useState(null);
+  //
   const [githubRepositories, setGithubRepositories] = useState([]);
   const [githubError, setGithubError] = useState("");
   const [githubLoading, setGithubLoading] = useState(true);
-
+  // That is where the decleration of variables, for they will be used and have been written in code
+	
   useEffect(() => {
     const controller = new AbortController();
-
+	{/*And this happens when the program is executed it sends a fetch call to MicrosoftGithub, with an async command*/}
     const fetchGithubProfile = async () => {
       try {
+		{/*try is a form of order from the codebase to the communication between github and this App.js file it now declares the headers variable here*/}
         const headers = {
           Accept: "application/vnd.github+json",
           "X-GitHub-Api-Version": "2022-11-28",
         };
-        const [profileResponse, repositoriesResponse] = await Promise.all([
+		{/*Inside of this command JavaScript coding languauge is setting the Array through a given await Promise.all() method, given the url address of shauntmcgovern
+		it then will set the headers variable which you need inside the fetch method along with the signal and the signal has been declared as a new class and that is object
+		of an if mistake, AbortController(), the Promise.all then has another fetch method passed on through the method itself making that two arguments. The difference here is
+		the first resting api is an overall updated profile information and the next resting api is the recent updates to the repositories and recent GithubUserActivity*/}
+		const [profileResponse, repositoriesResponse] = await Promise.all([
           fetch("https://api.github.com/users/shauntmcgovern", {
             headers,
             signal: controller.signal,
@@ -39,33 +48,44 @@ function App() {
             signal: controller.signal,
           }),
         ]);
-
+		{/*This is for if any errors occur during the data receive of the GithubAPI*/}
         if (!profileResponse.ok) {
           throw new Error(`GitHub profile request failed (${profileResponse.status})`);
         }
         if (!repositoriesResponse.ok) {
           throw new Error(`GitHub repositories request failed (${repositoriesResponse.status})`);
         }
-
+		{/*This again sets the arrary with the Promise.all method and what it returns with these arguments injected was the complete GithubProfile in a json and declares it as
+		profile and the GithubRepositories json and sets that to the const repositories variable*/}
         const [profile, repositories] = await Promise.all([
           profileResponse.json(),
           repositoriesResponse.json(),
         ]);
+		{/*It will throw an Error if the GithubUserProfile does not have any repositories to speak of*/}
         if (!Array.isArray(repositories)) {
           throw new Error("GitHub response did not include a repository list");
         }
-
+		{/*Then in the very same try-statement you have these two methods which are setGithubProfile and setGithubRepositories these methods are given so the coder may use them here and 
+		profile and the repositories variables are passed into them as the set arguements*/}
         setGithubProfile(profile);
+		{/*First, you pull the useState hook out of the React library so your file can use React's built-in memory system, Inside your component function, you call useState([]).
+		Passing [] (an empty array) tells React: "Start this piece of memory off as an empty list." useState([]) runs and returns a 2-item array: [ [], function() {...} ]
+		setGithubRepositories: Holds the internal React function created specifically to update githubRepositories, the variable named 'repositories' containing your list of repos.
+		You pass it as an argument into setGithubRepositories()*/}
         setGithubRepositories(repositories);
-      } catch (error) {
-        if (error.name !== "AbortError") {
-          setGithubError(error.message);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setGithubLoading(false);
-        }
       }
+	  {/*That will conclude the try loop which fetched the necessary jsons to work with in our App.js file with the JavaScript coding'language and now usually to true computer science
+	  form with every try statement, as it used if loops as well inside of it, you conclude the try statement with a catch control-flow block and this is used if there is Errors reported or is happening in real time
+	  for instance it could and what this is is a precaution. Usually the try loop and json fetches always truly complete once again only in precaution*/}
+	    catch (error) {
+	        if (error.name !== "AbortError") {
+	          setGithubError(error.message);
+	        }
+		} finally {
+		        if (!controller.signal.aborted) {
+		          setGithubLoading(false);
+		        }
+	    }
     };
 
     fetchGithubProfile();
