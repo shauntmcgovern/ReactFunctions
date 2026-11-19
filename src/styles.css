@@ -148,7 +148,7 @@ body {
   clip-path: inset(0 round 16px);
   opacity: 1;
 }
-.rectangle-containerDiagnosticList {
+.rectangle-containerRSSFEED {
   /* Layout Properties */
   top: 827px;
   left: 417px;
@@ -169,7 +169,7 @@ body {
   gap: 12px;
   overflow: hidden;
 }
-.rectangle-containerPatientInformation {
+.rectangle-containerShaunInformation {
   /* Layout Properties */
   top: 108px;
   left: 1216px;
