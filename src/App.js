@@ -236,19 +236,19 @@ function App() {
             
           </div>
 
-          <div class="rectangle-containerDiagnosticList">
+          <div class="rectangle-containerRSSFEED">
             {/*TONEFACE DISPLAY AND LIST-GITHUB API VISUAL DATA FETCH-INSTAGRAM TONE LINK APPROVAL-LIVE TONE FACE UPDATE DISPLAY
             https://www.cbsnews.com/latest/rss/main DISPLAYING IN ACCORDANCE WITH SHAUNS GITHUB AND INTELLECTUAL PROPERTY HERO 
             AND iNSiGNiA, fetchGithubAPI, I would like a live toggle like they do at the bottom of the LocalNews so if this 
             than this if this title is displayed could it then do this, if a title is displayed it could display'display'display
 			      a 'something' from my Github repositories as well. Just what titles where displayed which '**REALiiT'::){Y}
             Marco(VERPTICKWILLIAMS:09):-; said his current capability is displaying the RSS FEED and the GITHUB API*/}
-            <h2 className="panel-title">PersonWants++'</h2>
+            <h2>PersonWants++'</h2>
           </div>
         </div>
 
         <div class="column">
-          <div class="rectangle-containerPatientInformation">
+          <div class="rectangle-containerShaunInformation">
             &nbsp;
             <img
               src="/Assets/{Github'Github'Profile}.jpg"
