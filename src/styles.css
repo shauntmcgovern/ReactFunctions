@@ -135,7 +135,7 @@ body {
   background: var(--unnamed-color-ffffff) 0% 0% no-repeat padding-box;
   background: #ffffff 0% 0% no-repeat padding-box;
   border-radius: 16px;
-  overflow: hidden;
+  overflow-y: auto;
   opacity: 1;
 }
 .rectangled-containerWeatherBox {
@@ -149,30 +149,75 @@ body {
   opacity: 1;
 }
 .rectangle-containerRSSFEED {
-  /* Layout Properties */
-  top: 827px;
-  left: 417px;
   width: 766px;
   height: 649px;
   margin-top: 25px;
-  /* UI Properties */
-  background: var(--unnamed-color-ffffff) 0% 0% no-repeat padding-box;
-  background: #ffffff 0% 0% no-repeat padding-box;
-  border-radius: 16px;
-  opacity: 1;
-}
-.rectangle-containerRSSFEED {
+  padding: 20px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
-  padding: 20px;
   gap: 12px;
   overflow: hidden;
+  border-radius: 16px;
+  background: #ffffff;
 }
 .rss-feed-title {
   margin: 0;
   color: #072635;
   font-family: "Manrope", sans-serif;
+}
+.rss-ticker {
+  position: fixed;
+  z-index: 1000;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
+  padding: 12px 0;
+  background: #072635;
+  color: #ffffff;
+}
+.rss-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: rss-ticker-scroll 90s linear infinite;
+}
+.rss-ticker:hover .rss-ticker-track,
+.rss-ticker:focus-within .rss-ticker-track {
+  animation-play-state: paused;
+}
+.rss-ticker-content {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 16px;
+  padding-right: 16px;
+  white-space: nowrap;
+}
+.rss-ticker-headline {
+  color: #ffffff;
+  text-decoration: none;
+}
+.rss-ticker-separator {
+  color: #74d4c7;
+}
+@keyframes rss-ticker-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rss-ticker {
+    overflow-x: auto;
+  }
+  .rss-ticker-track {
+    animation: none;
+  }
+  .rss-ticker-content-duplicate {
+    display: none;
+  }
 }
 .rss-feed-list {
   flex: 1;
@@ -200,33 +245,54 @@ body {
   text-decoration: none;
 }
 .rss-feed-person,
-.rss-feed-description {
+.rss-feed-summary {
   margin: 4px 0 0;
   color: #37474f;
   font-size: 12px;
   line-height: 1.4;
 }
+.rss-feed-summary {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  line-clamp: 3;
+  -webkit-line-clamp: 3;
+}
 .rss-feed-person {
   font-weight: bold;
 }
-.github-code-search {
+.github-file-section {
   margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #e6e9ec;
   color: #37474f;
   font-size: 12px;
 }
-.github-code-search h3 {
+.github-file-section h3 {
   margin: 0 0 4px;
   font-size: 12px;
 }
-.github-code-search ul {
-  margin: 0;
-  padding-left: 18px;
+.github-file-example > p {
+  margin: 6px 0;
+  line-height: 1.4;
 }
-.github-code-search li {
-  overflow-wrap: anywhere;
-}
-.github-code-search a {
+.github-file-example > a,
+.rss-feed-source {
   color: #0866ff;
+}
+.github-file-preview {
+  box-sizing: border-box;
+  max-height: 220px;
+  width: 100%;
+  margin: 6px 0;
+  padding: 10px;
+  overflow: auto;
+  border-radius: 8px;
+  background: #102a36;
+  color: #e7f5f4;
+  font: 11px/1.5 monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 .rss-feed-item time {
   flex: 0 0 auto;
@@ -263,6 +329,7 @@ body {
   justify-content: center;
   gap: 32px;
   flex-wrap: nowrap;
+  padding-bottom: 48px;
 }
 /* Create four equal columns that sit next to each other */
 .column {

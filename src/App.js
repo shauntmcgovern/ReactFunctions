@@ -1,12 +1,20 @@
 import "./styles.css";
 //First run the terminal command of 'npm install' to install the necessary NPM's and then inside the terminal bash
 //run the 'npm start' command and it will display across the port of 'http://localhost:3000' this ReactAppProject 
-//using Github'Codespaces while updating this index/app/index/styles codebase
+//using Github'Codespaces while updating this index/app/html/styles codebase
 import React, { useState, useEffect, Fragment, useMemo } from "react";
 //React's internal engine creates the function mechanism when useState() runs.
 
 import Text from "react-text";
 import { DictionaryProvider as BaseProvider } from "@codedazur/react-dictionary";
+
+const mentionsXi = (item) => /\bxi\b/i.test(`${item.title} ${item.description || ""}`);
+const getRssSummary = (description = "") =>
+  String(description)
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
 function App() {
   // React state to store JSON data
@@ -27,9 +35,20 @@ function App() {
   const [rssItems, setRssItems] = useState([]);
   const [rssError, setRssError] = useState("");
   const [rssLoading, setRssLoading] = useState(true);
-  const [githubXiMatches, setGithubXiMatches] = useState([]);
-  const [githubXiSearchError, setGithubXiSearchError] = useState("");
-  const [githubXiSearchLoading, setGithubXiSearchLoading] = useState(true);
+  const rssTickerKey = useMemo(
+    () =>
+      rssItems
+        .slice(0, 8)
+        .map((item) => item.guid || item.link || item.title)
+        .join("|"),
+    [rssItems]
+  );
+  const [repositoryExample, setRepositoryExample] = useState(null);
+  const [repositoryExampleError, setRepositoryExampleError] = useState("");
+  const [repositoryExampleLoading, setRepositoryExampleLoading] = useState(true);
+  const [namespaceExample, setNamespaceExample] = useState(null);
+  const [namespaceExampleError, setNamespaceExampleError] = useState("");
+  const [namespaceExampleLoading, setNamespaceExampleLoading] = useState(true);
   // That is where the decleration of variables, for they will be used and have been written in code
 	
   useEffect(() => {
@@ -146,6 +165,8 @@ function App() {
   useEffect(() => {
     const controller = new AbortController();
     const feedUrl = "https://www.cbsnews.com/latest/rss/main";
+    const refreshInterval = 30_000;
+    let refreshIntervalId;
 
     const fetchRssFeed = async () => {
       try {
@@ -162,6 +183,7 @@ function App() {
           throw new Error(result.message || "CBS News feed response was invalid");
         }
         setRssItems(result.items);
+        setRssError("");
       } catch (error) {
         if (error.name !== "AbortError") {
           setRssError(error.message);
@@ -173,38 +195,120 @@ function App() {
       }
     };
 
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") {
+        fetchRssFeed();
+      }
+    };
+
     fetchRssFeed();
+    refreshIntervalId = window.setInterval(fetchRssFeed, refreshInterval);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    window.addEventListener("focus", refreshWhenVisible);
+
+    return () => {
+      controller.abort();
+      window.clearInterval(refreshIntervalId);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+      window.removeEventListener("focus", refreshWhenVisible);
+    };
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchNamespaceExample = async () => {
+      try {
+        const response = await fetch("/api/github/nineteen-namespace-example", {
+          signal: controller.signal,
+        });
+        const contentType = response.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) {
+          throw new Error(
+            `GitHub file endpoint returned ${contentType || "non-JSON content"} instead of JSON. In development, restart npm start so src/setupProxy.js is loaded.`
+          );
+        }
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || `GitHub file request failed (${response.status})`);
+        }
+        if (
+          !result ||
+          typeof result !== "object" ||
+          Array.isArray(result) ||
+          !result.file ||
+          typeof result.file !== "object" ||
+          Array.isArray(result.file) ||
+          typeof result.file.path !== "string" ||
+          typeof result.file.html_url !== "string" ||
+          !Number.isInteger(result.file.size) ||
+          !Number.isInteger(result.file.lineCount) ||
+          typeof result.file.preview !== "string"
+        ) {
+          throw new Error("GitHub response did not include the requested text file preview.");
+        }
+        setNamespaceExample(result);
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          setNamespaceExampleError(error.message);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setNamespaceExampleLoading(false);
+        }
+      }
+    };
+
+    fetchNamespaceExample();
     return () => controller.abort();
   }, []);
 
   useEffect(() => {
     const controller = new AbortController();
 
-    const searchGithubForXi = async () => {
+    const fetchRepositoryExample = async () => {
       try {
-        const response = await fetch("/api/github/xi-search", {
+        const response = await fetch("/api/github/emoji-heaven-example", {
           signal: controller.signal,
         });
+        const contentType = response.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) {
+          throw new Error(
+            `GitHub file endpoint returned ${contentType || "non-JSON content"} instead of JSON. In development, restart npm start so src/setupProxy.js is loaded.`
+          );
+        }
         const result = await response.json();
         if (!response.ok) {
-          throw new Error(result.message || `GitHub code search failed (${response.status})`);
+          throw new Error(result.message || `GitHub file request failed (${response.status})`);
         }
-        if (!Array.isArray(result.items)) {
-          throw new Error("GitHub code search response was invalid");
+        if (
+          !result ||
+          typeof result !== "object" ||
+          Array.isArray(result) ||
+          !result.file ||
+          typeof result.file !== "object" ||
+          Array.isArray(result.file) ||
+          typeof result.file.path !== "string" ||
+          typeof result.file.html_url !== "string" ||
+          !Number.isInteger(result.file.size) ||
+          !Number.isInteger(result.file.lineCount) ||
+          typeof result.file.preview !== "string"
+        ) {
+          throw new Error("GitHub response did not include the EmojiHeaven.js preview.");
         }
-        setGithubXiMatches(result.items);
+        setRepositoryExample(result);
       } catch (error) {
         if (error.name !== "AbortError") {
-          setGithubXiSearchError(error.message);
+          setRepositoryExampleError(error.message);
         }
       } finally {
         if (!controller.signal.aborted) {
-          setGithubXiSearchLoading(false);
+          setRepositoryExampleLoading(false);
         }
       }
     };
 
-    searchGithubForXi();
+    fetchRepositoryExample();
     return () => controller.abort();
   }, []);
 
@@ -224,7 +328,7 @@ function App() {
       precipitationChance: dailyForecast.precipitation_probability_max?.[index],
     }));
   }, [dailyForecast]);
-  
+
   return (
     <Fragment>
       <div class="row">
@@ -269,6 +373,56 @@ function App() {
                 </>
               ) : null}
             </section>
+            <section
+              className="github-file-section"
+              aria-label="EmojiHeaven.js source example"
+            >
+              <h3>EmojiHeaven.js from GitHub</h3>
+              {repositoryExampleLoading ? (
+                <p>Loading file preview...</p>
+              ) : repositoryExampleError ? (
+                <p role="alert">Unable to load EmojiHeaven.js: {repositoryExampleError}</p>
+              ) : repositoryExample ? (
+                <div className="github-file-example">
+                  <a
+                    href={repositoryExample.file.html_url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {repositoryExample.file.path}
+                  </a>
+                  <pre className="github-file-preview">
+                    {repositoryExample.file.preview}
+                    {repositoryExample.file.previewTruncated ? "\n…" : ""}
+                  </pre>
+                </div>
+              ) : null}
+            </section>
+            <section
+              className="github-file-section"
+              aria-label="NineteenNameSpaceNineteen.txt source example"
+            >
+              <h3>NineteenNameSpaceNineteen.txt from GitHub</h3>
+              {namespaceExampleLoading ? (
+                <p>Loading file preview...</p>
+              ) : namespaceExampleError ? (
+                <p role="alert">Unable to load the text file: {namespaceExampleError}</p>
+              ) : namespaceExample ? (
+                <div className="github-file-example">
+                  <a
+                    href={namespaceExample.file.html_url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {namespaceExample.file.path}
+                  </a>
+                  <pre className="github-file-preview">
+                    {namespaceExample.file.preview}
+                    {namespaceExample.file.previewTruncated ? "\n…" : ""}
+                  </pre>
+                </div>
+              ) : null}
+            </section>
           </div>
         </div>
 
@@ -306,7 +460,6 @@ function App() {
             </section>
             
           </div>
-          
           <div class="rectangle-containerRSSFEED">
             {/*TONEFACE DISPLAY AND LIST-GITHUB API VISUAL DATA FETCH-INSTAGRAM TONE LINK APPROVAL-LIVE TONE FACE UPDATE DISPLAY
             https://www.cbsnews.com/latest/rss/main DISPLAYING IN ACCORDANCE WITH SHAUNS GITHUB AND INTELLECTUAL PROPERTY HERO 
@@ -314,63 +467,63 @@ function App() {
             than this if this title is displayed could it then do this, if a title is displayed it could display'display'display
 			      a 'something' from my Github repositories as well. Just what titles where displayed which '**REALiiT'::){Y}
             Marco(VERPTICKWILLIAMS:09):-; said his current capability is displaying the RSS FEED and the GITHUB API==PersonWants++'*/}
-            <h2 className="rss-feed-title">CBS News</h2>
-              {rssLoading ? (
-                <p>Loading CBS News headlines...</p>
-              ) : rssError ? (
-                <p role="alert">Unable to load CBS News headlines: {rssError}</p>
-              ) : (
-              <ul className="rss-feed-list">
-                {rssItems.slice(0, 8).map((item) => {
-                  const mentionsXi = /xi\b/i.test(`${item.title} ${item.description || ""}`);
+            <h2 className="rss-feed-title">CBS News RSS Feed</h2>
+            <a
+              className="rss-feed-source"
+              href="https://www.cbsnews.com/latest/rss/main"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open source feed
+            </a>
+            {rssLoading && rssItems.length === 0 ? (
+              <p>Loading CBS News headlines...</p>
+            ) : rssError && rssItems.length === 0 ? (
+              <p role="alert">Unable to load CBS News headlines: {rssError}</p>
+            ) : rssItems.length > 0 ? (
+              <>
+                {rssError ? (
+                  <p role="alert">
+                    Unable to refresh CBS News headlines: {rssError}. Showing the latest
+                    loaded headlines.
+                  </p>
+                ) : null}
+                <ul className="rss-feed-list">
+                  {rssItems.slice(0, 8).map((item) => {
+                    const itemMentionsXi = mentionsXi(item);
+                    const summary = getRssSummary(item.description || "");
 
-                  return (
-                    <li className="rss-feed-item" key={item.guid || item.link}>
-                      <div className="rss-feed-copy">
-                        <a href={item.link} target="_blank" rel="noreferrer">
-                          {item.title}
-                        </a>
-                        {mentionsXi ? (
-                          <>
+                    return (
+                      <li className="rss-feed-item" key={item.guid || item.link}>
+                        <div className="rss-feed-copy">
+                          <a href={item.link} target="_blank" rel="noreferrer">
+                            {item.title}
+                          </a>
+                          {itemMentionsXi ? (
                             <p className="rss-feed-person">
                               Full name: Xi Jinping | Country: China
                             </p>
-                            <section className="github-code-search" aria-label="GitHub search results for Xi Jinping">
-                              <h3>GitHub code matches</h3>
-                              {githubXiSearchLoading ? (
-                                <p>Searching public GitHub repositories...</p>
-                              ) : githubXiSearchError ? (
-                                <p role="alert">
-                                  Unable to search GitHub: {githubXiSearchError}
-                                </p>
-                              ) : githubXiMatches.length > 0 ? (
-                                <ul>
-                                  {githubXiMatches.map((match) => (
-                                    <li key={`${match.repository.full_name}:${match.path}`}>
-                                      <a href={match.html_url} target="_blank" rel="noreferrer">
-                                        {match.repository.full_name}/{match.path}
-                                      </a>
-                                    </li>
-                                  ))}
-                                </ul>
-                              ) : (
-                                <p>No matching files found in public repositories.</p>
-                              )}
-                            </section>
-                          </>
-                        ) : null}
-                        {item.description ? (
-                          <p className="rss-feed-description">{item.description}</p>
-                        ) : null}
-                      </div>
-                      <time>{new Date(item.pubDate).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}</time>
-                    </li>
-                  );
-                })}
-              </ul>
+                          ) : null}
+                          {summary ? (
+                            <p className="rss-feed-summary">
+                              {summary.slice(0, 220)}
+                              {summary.length > 220 ? "…" : ""}
+                            </p>
+                          ) : null}
+                        </div>
+                        <time>
+                          {new Date(item.pubDate).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </time>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            ) : (
+              <p>No CBS News headlines are available.</p>
             )}
           </div>
         </div>
@@ -421,10 +574,42 @@ function App() {
           <div class="rectangle-containerLabResults">
             <h2>LiveInstagram &&(||'((OR))) RozesXAccount, Facebook:{0}9;</h2>
           </div>
-
         </div>
       </div>
-
+      {rssItems.length > 0 ? (
+        <footer className="rss-ticker" aria-label="Latest CBS News headlines">
+          <div key={rssTickerKey} className="rss-ticker-track">
+            <div className="rss-ticker-content">
+              {rssItems.slice(0, 8).map((item) => (
+                <Fragment key={item.guid || item.link || item.title}>
+                  <a
+                    className="rss-ticker-headline"
+                    href={item.link}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {item.title}
+                  </a>
+                  <span className="rss-ticker-separator" aria-hidden="true">
+                    •
+                  </span>
+                </Fragment>
+              ))}
+            </div>
+            <div
+              className="rss-ticker-content rss-ticker-content-duplicate"
+              aria-hidden="true"
+            >
+              {rssItems.slice(0, 8).map((item) => (
+                <Fragment key={item.guid || item.link || item.title}>
+                  <span className="rss-ticker-headline">{item.title}</span>
+                  <span className="rss-ticker-separator">•</span>
+                </Fragment>
+              ))}
+            </div>
+          </div>
+        </footer>
+      ) : null}
     </Fragment>
   );
 }

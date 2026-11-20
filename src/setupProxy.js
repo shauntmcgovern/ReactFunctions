@@ -1,77 +1,111 @@
 const https = require("https");
 
-module.exports = function setupProxy(app) {
-  app.get("/api/github/xi-search", (req, res) => {
-    const token = process.env.GITHUB_TOKEN;
-    if (!token) {
-      res.status(503).json({
-        message: "GitHub search is not configured. Set GITHUB_TOKEN in .env.local and restart the app.",
-      });
-      return;
-    }
+const repositoryName =
+  "shauntmcgovern/GATTEYENTERPRiSESXATTEYECOMPLEXXENTERPRiSESSHAUNiNTELLECTUALSPROPERTYSHEROiNSiGNiASHASBANGSGAMEiNCC";
+const githubApi = "https://api.github.com";
+const maxResponseBytes = 5 * 1024 * 1024;
 
-    const githubUrl = new URL("https://api.github.com/search/code");
-    githubUrl.searchParams.set("q", '"Xi Jinping" user:shauntmcgovern is:public');
-    githubUrl.searchParams.set("per_page", "5");
-
+function requestHttps(url, headers = {}) {
+  return new Promise((resolve, reject) => {
     const request = https.get(
-      githubUrl,
-      {
-        headers: {
-          Accept: "application/vnd.github+json",
-          Authorization: `Bearer ${token}`,
-          "User-Agent": "ReactFunctions",
-          "X-GitHub-Api-Version": "2022-11-28",
-        },
-      },
-      (githubResponse) => {
-        let responseBody = "";
-        githubResponse.setEncoding("utf8");
-        githubResponse.on("data", (chunk) => {
-          responseBody += chunk;
+      url,
+      { headers: { "User-Agent": "ReactFunctions", ...headers } },
+      (response) => {
+        let body = "";
+        let responseBytes = 0;
+        response.setEncoding("utf8");
+        response.on("data", (chunk) => {
+          responseBytes += Buffer.byteLength(chunk);
+          if (responseBytes > maxResponseBytes) {
+            request.destroy(new Error("A GitHub API response exceeded the 5 MB limit."));
+            return;
+          }
+          body += chunk;
         });
-        githubResponse.on("end", () => {
-          let result;
-          try {
-            result = JSON.parse(responseBody);
-          } catch {
-            res.status(502).json({ message: "GitHub returned an invalid search response." });
-            return;
-          }
-
-          if (githubResponse.statusCode < 200 || githubResponse.statusCode >= 300) {
-            res.status(githubResponse.statusCode).json({
-              message: result.message || `GitHub code search failed (${githubResponse.statusCode}).`,
-            });
-            return;
-          }
-          if (!Array.isArray(result.items)) {
-            res.status(502).json({ message: "GitHub search response did not include results." });
-            return;
-          }
-
-          res.json({
-            items: result.items
-              .filter((item) => item.repository?.private === false)
-              .map((item) => ({
-                html_url: item.html_url,
-                path: item.path,
-                repository: { full_name: item.repository.full_name },
-              })),
-          });
+        response.on("end", () => {
+          resolve({ statusCode: response.statusCode || 502, body });
         });
       }
     );
 
     request.setTimeout(15000, () => {
-      request.destroy(new Error("GitHub code search timed out."));
+      request.destroy(new Error("GitHub API request timed out."));
     });
-    request.on("error", (error) => {
-      if (!res.headersSent) {
-        res.status(502).json({ message: error.message });
-      } else {
-        res.destroy(error);
-      }
-    });
+    request.on("error", reject);
+  });
+}
+
+async function requestJson(url) {
+  const response = await requestHttps(url, {
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+  });
+  let result;
+  try {
+    result = JSON.parse(response.body);
+  } catch {
+    throw new Error("GitHub returned an invalid repository response.");
+  }
+  if (response.statusCode < 200 || response.statusCode >= 300) {
+    throw new Error(result.message || `GitHub repository request failed (${response.statusCode}).`);
+  }
+  return result;
+}
+
+async function fetchRepositoryExample(filePath) {
+  const repository = await requestJson(`${githubApi}/repos/${repositoryName}`);
+  const encodedPath = filePath.split("/").map(encodeURIComponent).join("/");
+  const file = await requestJson(
+    `${githubApi}/repos/${repositoryName}/contents/${encodedPath}?ref=${encodeURIComponent(repository.default_branch)}`
+  );
+  if (file.type !== "file" || typeof file.path !== "string" || typeof file.html_url !== "string") {
+    throw new Error("GitHub did not return the requested repository file.");
+  }
+
+  let source;
+  if (file.encoding === "base64" && typeof file.content === "string") {
+    source = Buffer.from(file.content, "base64").toString("utf8");
+  } else if (file.encoding === "none" && typeof file.download_url === "string") {
+    const response = await requestHttps(file.download_url);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw new Error(`GitHub file download failed (${response.statusCode}).`);
+    }
+    source = response.body;
+  } else {
+    throw new Error("GitHub did not return the requested file as text.");
+  }
+
+  const previewLength = 1200;
+  return {
+    file: {
+      path: file.path,
+      html_url: file.html_url,
+      size: file.size,
+      lineCount: source.split(/\r?\n/).length,
+      preview: source.slice(0, previewLength),
+      previewTruncated: source.length > previewLength,
+    },
+  };
+}
+
+module.exports = function setupProxy(app) {
+  app.get("/api/github/emoji-heaven-example", async (req, res) => {
+    try {
+      res.json(await fetchRepositoryExample("TONEFacce/EmojiHeaven.js"));
+    } catch (error) {
+      res.status(502).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/github/nineteen-namespace-example", async (req, res) => {
+    try {
+      res.json(
+        await fetchRepositoryExample(
+          "TONEFacce/{M{X}}{CG'CG'CG'CG'CG'CG'CG}ccurrent'''NameSpace[][][][19{9'99}--19'99]partN{i}neteenNameSpaceNineteen.txt"
+        )
+      );
+    } catch (error) {
+      res.status(502).json({ message: error.message });
+    }
   });
 };
