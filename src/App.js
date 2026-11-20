@@ -306,8 +306,14 @@ function App() {
             </section>
             
           </div>
-
+          
           <div class="rectangle-containerRSSFEED">
+            {/*TONEFACE DISPLAY AND LIST-GITHUB API VISUAL DATA FETCH-INSTAGRAM TONE LINK APPROVAL-LIVE TONE FACE UPDATE DISPLAY
+            https://www.cbsnews.com/latest/rss/main DISPLAYING IN ACCORDANCE WITH SHAUNS GITHUB AND INTELLECTUAL PROPERTY HERO 
+            AND iNSiGNiA, fetchGithubAPI, I would like a live toggle like they do at the bottom of the LocalNews so if this 
+            than this if this title is displayed could it then do this, if a title is displayed it could display'display'display
+			      a 'something' from my Github repositories as well. Just what titles where displayed which '**REALiiT'::){Y}
+            Marco(VERPTICKWILLIAMS:09):-; said his current capability is displaying the RSS FEED and the GITHUB API==PersonWants++'*/}
             <h2 className="rss-feed-title">CBS News</h2>
               {rssLoading ? (
                 <p>Loading CBS News headlines...</p>
