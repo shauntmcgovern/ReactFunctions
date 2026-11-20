@@ -126,7 +126,7 @@ body {
   font-family: sans-serif;
   margin: 20px;
 }
-.rectangle-containerPatients {
+.rectangle-containerWebsites {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -138,7 +138,7 @@ body {
   overflow: hidden;
   opacity: 1;
 }
-.rectangled-containerDiagnosisHistory {
+.rectangled-containerWeatherBox {
   width: 766px;
   min-height: 673px;
   height: auto;
@@ -153,7 +153,7 @@ body {
   top: 827px;
   left: 417px;
   width: 766px;
-  height: 349px;
+  height: 649px;
   margin-top: 25px;
   /* UI Properties */
   background: var(--unnamed-color-ffffff) 0% 0% no-repeat padding-box;
@@ -161,13 +161,77 @@ body {
   border-radius: 16px;
   opacity: 1;
 }
-.rectangle-containerDiagnosticList {
+.rectangle-containerRSSFEED {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   padding: 20px;
   gap: 12px;
   overflow: hidden;
+}
+.rss-feed-title {
+  margin: 0;
+  color: #072635;
+  font-family: "Manrope", sans-serif;
+}
+.rss-feed-list {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+.rss-feed-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid #e6e9ec;
+  font-family: "Manrope", sans-serif;
+  font-size: 13px;
+}
+.rss-feed-copy {
+  min-width: 0;
+}
+.rss-feed-item a {
+  color: #0866ff;
+  text-decoration: none;
+}
+.rss-feed-person,
+.rss-feed-description {
+  margin: 4px 0 0;
+  color: #37474f;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.rss-feed-person {
+  font-weight: bold;
+}
+.github-code-search {
+  margin-top: 8px;
+  color: #37474f;
+  font-size: 12px;
+}
+.github-code-search h3 {
+  margin: 0 0 4px;
+  font-size: 12px;
+}
+.github-code-search ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.github-code-search li {
+  overflow-wrap: anywhere;
+}
+.github-code-search a {
+  color: #0866ff;
+}
+.rss-feed-item time {
+  flex: 0 0 auto;
+  color: #707070;
+  font-size: 12px;
 }
 .rectangle-containerShaunInformation {
   /* Layout Properties */
@@ -226,13 +290,13 @@ body {
   flex: 0 0 24px;
   object-fit: contain;
 }
-.circle-imagePatientInformation {
+.circle-imageShaunInformation {
   display: block;
   margin: 20px auto 0;
   width: 200px;
   height: 200px;
 }
-.textPatientInformation .name-text {
+.textShaunInformation .name-text {
   margin-top: 8px;
 }
 .rectangle-containerPatientInformation > div {

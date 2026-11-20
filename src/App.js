@@ -24,6 +24,12 @@ function App() {
   const [githubRepositories, setGithubRepositories] = useState([]);
   const [githubError, setGithubError] = useState("");
   const [githubLoading, setGithubLoading] = useState(true);
+  const [rssItems, setRssItems] = useState([]);
+  const [rssError, setRssError] = useState("");
+  const [rssLoading, setRssLoading] = useState(true);
+  const [githubXiMatches, setGithubXiMatches] = useState([]);
+  const [githubXiSearchError, setGithubXiSearchError] = useState("");
+  const [githubXiSearchLoading, setGithubXiSearchLoading] = useState(true);
   // That is where the decleration of variables, for they will be used and have been written in code
 	
   useEffect(() => {
@@ -136,6 +142,71 @@ function App() {
     fetchWeather();
     return () => controller.abort();
   }, []);
+  //The Copilot{'} CBS'{NEWS/:'}RSSFEED"-'Effect PullFetch(')
+  useEffect(() => {
+    const controller = new AbortController();
+    const feedUrl = "https://www.cbsnews.com/latest/rss/main";
+
+    const fetchRssFeed = async () => {
+      try {
+        const response = await fetch(
+          `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`,
+          { signal: controller.signal }
+        );
+        if (!response.ok) {
+          throw new Error(`CBS News feed request failed (${response.status})`);
+        }
+
+        const result = await response.json();
+        if (result.status !== "ok" || !Array.isArray(result.items)) {
+          throw new Error(result.message || "CBS News feed response was invalid");
+        }
+        setRssItems(result.items);
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          setRssError(error.message);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setRssLoading(false);
+        }
+      }
+    };
+
+    fetchRssFeed();
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const searchGithubForXi = async () => {
+      try {
+        const response = await fetch("/api/github/xi-search", {
+          signal: controller.signal,
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || `GitHub code search failed (${response.status})`);
+        }
+        if (!Array.isArray(result.items)) {
+          throw new Error("GitHub code search response was invalid");
+        }
+        setGithubXiMatches(result.items);
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          setGithubXiSearchError(error.message);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setGithubXiSearchLoading(false);
+        }
+      }
+    };
+
+    searchGithubForXi();
+    return () => controller.abort();
+  }, []);
 
   //substantiation equiping formally attaching the weather ""data to the forecastDays variable for use in the JSX rendering below"Copilot{'}
   const forecastDays = useMemo(() => {
@@ -159,7 +230,7 @@ function App() {
       <div class="row">
         <div class="column">
           &nbsp;&nbsp;&nbsp;
-          <div class="rectangle-containerPatients">
+          <div class="rectangle-containerWebsites">
             <h2 className="h2 patients-header">
               Websites
               <img
@@ -203,7 +274,7 @@ function App() {
 
         <div class="column">
 
-          <div class="rectangled-containerDiagnosisHistory">
+          <div class="rectangled-containerWeatherBox">
             &ensp;
             <p aria-live="polite">
               &ensp;
@@ -237,13 +308,64 @@ function App() {
           </div>
 
           <div class="rectangle-containerRSSFEED">
-            {/*TONEFACE DISPLAY AND LIST-GITHUB API VISUAL DATA FETCH-INSTAGRAM TONE LINK APPROVAL-LIVE TONE FACE UPDATE DISPLAY
-            https://www.cbsnews.com/latest/rss/main DISPLAYING IN ACCORDANCE WITH SHAUNS GITHUB AND INTELLECTUAL PROPERTY HERO 
-            AND iNSiGNiA, fetchGithubAPI, I would like a live toggle like they do at the bottom of the LocalNews so if this 
-            than this if this title is displayed could it then do this, if a title is displayed it could display'display'display
-			      a 'something' from my Github repositories as well. Just what titles where displayed which '**REALiiT'::){Y}
-            Marco(VERPTICKWILLIAMS:09):-; said his current capability is displaying the RSS FEED and the GITHUB API*/}
-            <h2>PersonWants++'</h2>
+            <h2 className="rss-feed-title">CBS News</h2>
+              {rssLoading ? (
+                <p>Loading CBS News headlines...</p>
+              ) : rssError ? (
+                <p role="alert">Unable to load CBS News headlines: {rssError}</p>
+              ) : (
+              <ul className="rss-feed-list">
+                {rssItems.slice(0, 8).map((item) => {
+                  const mentionsXi = /xi\b/i.test(`${item.title} ${item.description || ""}`);
+
+                  return (
+                    <li className="rss-feed-item" key={item.guid || item.link}>
+                      <div className="rss-feed-copy">
+                        <a href={item.link} target="_blank" rel="noreferrer">
+                          {item.title}
+                        </a>
+                        {mentionsXi ? (
+                          <>
+                            <p className="rss-feed-person">
+                              Full name: Xi Jinping | Country: China
+                            </p>
+                            <section className="github-code-search" aria-label="GitHub search results for Xi Jinping">
+                              <h3>GitHub code matches</h3>
+                              {githubXiSearchLoading ? (
+                                <p>Searching public GitHub repositories...</p>
+                              ) : githubXiSearchError ? (
+                                <p role="alert">
+                                  Unable to search GitHub: {githubXiSearchError}
+                                </p>
+                              ) : githubXiMatches.length > 0 ? (
+                                <ul>
+                                  {githubXiMatches.map((match) => (
+                                    <li key={`${match.repository.full_name}:${match.path}`}>
+                                      <a href={match.html_url} target="_blank" rel="noreferrer">
+                                        {match.repository.full_name}/{match.path}
+                                      </a>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p>No matching files found in public repositories.</p>
+                              )}
+                            </section>
+                          </>
+                        ) : null}
+                        {item.description ? (
+                          <p className="rss-feed-description">{item.description}</p>
+                        ) : null}
+                      </div>
+                      <time>{new Date(item.pubDate).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })}</time>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
         </div>
 
@@ -253,51 +375,50 @@ function App() {
             <img
               src="/Assets/{Github'Github'Profile}.jpg"
               alt="PatientPicture"
-              className="circle-imagePatientInformation"
+              className="circle-imageShaunInformation"
             />
           <p className="name-textPatientInformation">PersonalInformation</p>
           
           <div>
-          <img src="/Assets/{MicrosoftBabyLogo}.png" alt="DateOfBirthIcon" className="iconPatientInformation" />
-          <span class ="textPatientInformation">Date of Birth 
+          <img src="/Assets/{MicrosoftBabyLogo}.png" alt="DateOfBirthIcon" className="MicrosoftLogo" />
+          <span class ="textShaunInformation">N/A**'
           </span>
           </div>
           
           <div>
           <img src="/Assets/{MicrosoftBabyLogo}.png" alt="GenderIcon" className="iconPatientInformation" />
-          <span className="textPatientInformation">Gender
+          <span className="textShaunInformation">N/A**'
           </span>
           </div>
         
           <div>
           <img src="/Assets/{MicrosoftBabyLogo}.png" alt="PhoneIcon" className="iconPatientInformation" />
-          <span className="textPatientInformation">Contact Info.
+          <span className="textShaunInformation">N/A**'
           </span>
           </div>
           
           <div>
           <img src="/Assets/{MicrosoftBabyLogo}.png" alt="EmergencyPhoneIcon" className="iconPatientInformation" />
-          <span className="textPatientInformation">Emergency Contacts
+          <span className="textShaunInformation">N/A**'
           </span>
           </div>
 
           <div>
           <img src="/Assets/{MicrosoftBabyLogo}.png" alt="InsuranceIcon" className="iconPatientInformation" />
-          <span className="textPatientInformation">Insurance Provider
+          <span className="textShaunInformation">N/A**'
           </span>
           </div>
 
-          <p className="name-textPatientInformation selected-nav-item">Shaun McGovern</p>
           </div>
 
 
           <div class="rectangle-containerLabResults">
-            <h2 className="panel-title">LiveInstagram &&(||'((OR))) RozesXAccount, Facebook:{0}9;</h2>
+            <h2>LiveInstagram &&(||'((OR))) RozesXAccount, Facebook:{0}9;</h2>
           </div>
 
         </div>
       </div>
-      
+
     </Fragment>
   );
 }
